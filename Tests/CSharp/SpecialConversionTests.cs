@@ -92,23 +92,41 @@ End Class", @"class Test
         }
 
         [Fact]
-        public void EnumToInt()
+        public void GlobalNamespace()
         {
             TestConversionVisualBasicToCSharp(
-            @"Public Enum Test
-    Val1
-End Enum
-
-Class Test
-    Public CR As Integer = Test.Val1
-End Class", @"public enum Test
+@"Namespace [Global].InnerNamespace
+    Public Class Test
+    End Class
+End Namespace",
+@"namespace Global.InnerNamespace
 {
-    Val1
-}
+    public class Test
+    {
+    }
+}");
+        }
 
-class Test
+        [Fact]
+        public void StringInterpolationWithDoubleQuotes()
+        {
+            TestConversionVisualBasicToCSharp(
+@"Namespace [Global].InnerNamespace
+    Public Class Test
+        Public Function StringInter(t As String) As String
+            Return $""{t} """" t""
+        End Function
+    End Class
+End Namespace",
+@"namespace Global.InnerNamespace
 {
-    public int CR = (int)Test.Val1;
+    public class Test
+    {
+        public string StringInter(string t)
+        {
+            return $""{t} \"" t"";
+        }
+    }
 }");
         }
     }

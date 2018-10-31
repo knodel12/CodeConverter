@@ -185,11 +185,20 @@ namespace ICSharpCode.CodeConverter.CSharp
             var worthBeingAVerbatimString = IsWorthBeingAVerbatimString(s1);
             if (worthBeingAVerbatimString)
             {
-                var valueWithReplacements = s1.Replace("\"", "\"\"");
+                var valueWithReplacements = CleanContentsOfString(s1, true);
                 return $"@\"{valueWithReplacements}\"";
             } 
 
-            return "\"" + valueText.Substring(1, valueText.Length - 2).Replace("\"\"", "\\\"") + "\"";
+            return "\"" + CleanContentsOfString(valueText.Substring(1, valueText.Length - 2), false) + "\"";
+        }
+
+        internal string CleanContentsOfString(string s1, bool isVerbatimString)
+        {
+            if (isVerbatimString) {
+                return s1.Replace("\"", "\"\"");
+            } else {
+                return s1.Replace("\"\"", "\\\"");
+            }
         }
 
         public bool IsWorthBeingAVerbatimString(string s1)
