@@ -131,12 +131,12 @@ namespace ICSharpCode.CodeConverter.CSharp
 
         public ExpressionSyntax Literal(object o, string valueText = null) => GetLiteralExpression(o, valueText);
 
-        internal ExpressionSyntax GetLiteralExpression(object value, string valueText = null)
+        internal ExpressionSyntax GetLiteralExpression(object value, string fullText = null)
         {
-            if (value is string s) {
-                valueText = GetStringValueText(s, valueText);
+            if (value is string valueText) {
+                fullText = GetStringValueText(valueText, fullText);
                 return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.StringLiteralExpression,
-                    SyntaxFactory.Literal(valueText, s));
+                    SyntaxFactory.Literal(fullText, valueText));
             }
 
             if (value == null)
@@ -144,33 +144,33 @@ namespace ICSharpCode.CodeConverter.CSharp
             if (value is bool)
                 return SyntaxFactory.LiteralExpression((bool)value ? Microsoft.CodeAnalysis.CSharp.SyntaxKind.TrueLiteralExpression : Microsoft.CodeAnalysis.CSharp.SyntaxKind.FalseLiteralExpression);
 
-            valueText = valueText != null ? ConvertNumericLiteralValueText(valueText, value) : value.ToString();
+            fullText = fullText != null ? ConvertNumericLiteralValueText(fullText, value) : value.ToString();
 
             if (value is byte)
-                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(valueText, (byte)value));
+                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(fullText, (byte)value));
             if (value is sbyte)
-                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(valueText, (sbyte)value));
+                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(fullText, (sbyte)value));
             if (value is short)
-                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(valueText, (short)value));
+                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(fullText, (short)value));
             if (value is ushort)
-                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(valueText, (ushort)value));
+                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(fullText, (ushort)value));
             if (value is int)
-                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(valueText, (int)value));
+                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(fullText, (int)value));
             if (value is uint)
-                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(valueText, (uint)value));
+                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(fullText, (uint)value));
             if (value is long)
-                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(valueText, (long)value));
+                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(fullText, (long)value));
             if (value is ulong)
-                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(valueText, (ulong)value));
+                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(fullText, (ulong)value));
 
             if (value is float)
-                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(valueText, (float)value));
+                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(fullText, (float)value));
             if (value is double) {
                 // Important to use value text, otherwise "10.0" gets coerced to and integer literal of 10 which can change semantics
-                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(valueText, (double)value));
+                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(fullText, (double)value));
             }
             if (value is decimal) {
-                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(valueText, (decimal)value));
+                return SyntaxFactory.LiteralExpression(Microsoft.CodeAnalysis.CSharp.SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(fullText, (decimal)value));
             }
 
             if (value is char)
@@ -180,24 +180,24 @@ namespace ICSharpCode.CodeConverter.CSharp
             throw new ArgumentOutOfRangeException(nameof(value), value, null);
         }
 
-        internal string GetStringValueText(string s1, string valueText)
+        internal string GetStringValueText(string valueText, string fullText)
         {
-            var worthBeingAVerbatimString = IsWorthBeingAVerbatimString(s1);
+            var worthBeingAVerbatimString = IsWorthBeingAVerbatimString(valueText);
             if (worthBeingAVerbatimString)
             {
-                var valueWithReplacements = CleanContentsOfString(s1, true);
+                var valueWithReplacements = CleanContentsOfString(valueText, fullText, true);
                 return $"@\"{valueWithReplacements}\"";
             } 
 
-            return "\"" + CleanContentsOfString(valueText.Substring(1, valueText.Length - 2), false) + "\"";
+            return "\"" + CleanContentsOfString(valueText, fullText.Substring(1, fullText.Length - 2), false) + "\"";
         }
 
-        internal string CleanContentsOfString(string s1, bool isVerbatimString)
+        internal string CleanContentsOfString(string s1, string valueText, bool isVerbatimString)
         {
             if (isVerbatimString) {
                 return s1.Replace("\"", "\"\"");
             } else {
-                return s1.Replace("\"\"", "\\\"");
+                return valueText.Replace("\"\"", "\\\"");
             }
         }
 
